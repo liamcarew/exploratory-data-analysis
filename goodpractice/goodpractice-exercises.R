@@ -39,39 +39,67 @@ matrics_long <- pivot_longer(matrics, cols = -1, names_to = "province", values_t
 ### 1D geoms only need you to specify an "x" in the aesthetics
 
 ## geom_density
-#with no smoothing
-diamonds %>% 
+#initial
+plot1 <- diamonds %>% 
   ggplot(aes(x = price)) + 
-  geom_density()
-#with smoothing
-diamonds %>% 
+  geom_density() +
+  labs(title='Initial')
+#smoother
+plot2 <- diamonds %>% 
   ggplot(aes(x = price)) + 
-  geom_density(adjust=1.75)
+  geom_density(adjust=1.8) +
+  labs(title='Smoother')
+#rougher
+plot3 <- diamonds %>% 
+  ggplot(aes(x = price)) + 
+  geom_density(adjust=0.5) +
+  labs(title='Rougher')
+
+plot1 + plot2 + plot3
 
 ## geom_histogram
 #without smoothing
-diamonds %>% 
+plot4 <- diamonds %>% 
   ggplot(aes(x = price)) + 
-  geom_histogram()
-#with smoothing
-diamonds %>% 
+  geom_histogram() +
+  labs(title='Initial')
+#Smoother
+plot5 <- diamonds %>% 
   ggplot(aes(x = price)) + 
-  geom_histogram(binwidth=400) #I don't think this is right - try kernel density?
+  geom_histogram(binwidth=1000) + #I don't think this is right - try kernel density?
+  labs(title='Smoother')
+#Rougher
+plot6 <- diamonds %>% 
+  ggplot(aes(x = price)) + 
+  geom_histogram(binwidth=100) + #I don't think this is right - try kernel density?
+  labs(title='Rougher')
+
+plot4 + plot5 + plot6
 
 ## geom_freqpoly
-#without smoothing
-diamonds %>% 
+#initial
+plot7 <- diamonds %>% 
   ggplot(aes(x = price)) + 
-  geom_freqpoly()
-#with smoothing
-diamonds %>% 
+  geom_freqpoly() +
+  labs(title='Initial')
+#Smoother
+plot8 <- diamonds %>% 
   ggplot(aes(x = price)) +
-  geom_freqpoly(binwidth=400) #I don't think this is right - try kernel density?
+  geom_freqpoly(binwidth=1000) + #I don't think this is right - try kernel density?
+  labs(title='Smoother')
+#Rougher
+plot9 <- diamonds %>% 
+  ggplot(aes(x = price)) +
+  geom_freqpoly(binwidth=100) + #I don't think this is right - try kernel density?
+  labs(title='Rougher')
+
+plot7 + plot8 + plot9
 
 ## additional parameters control smoothing (see ?geom_xxx)
 
 # EXERCISE: adapt each of the plots above so that the densities/histograms are 
 # either "smoother" or "rougher". Choose an appropriate amount of smoothing.
+# ^(the adaptions are shown in the above code)
 
 ## geom_bar
 
@@ -112,6 +140,22 @@ co2 %>% filter(Month == "January") %>%
 co2 %>%
   ggplot(aes(x = Year, y = co2, col=Month)) + 
   geom_line()
+
+#using fill
+co2 %>%
+  ggplot(aes(x = Year, y = co2, fill=Month)) +
+  geom_area(position = 'identity', alpha=0.4) +
+  geom_line()
+#tried to limit y axis to ymin=300 using geom_ribbon() to try and get a nicer looking plot
+#Any help with this will be much appreciated
+
+#using fill & colour
+co2 %>%
+  ggplot(aes(x = Year, y = co2, fill=Month)) +
+  geom_area(position = 'identity', alpha=0.4) +
+  geom_line(aes(colour=Month))
+#same issue as above - looks a bit better though but can't see enough detail
+#to make the graph useful
 
 #without using fill or colour
 co2 %>%
@@ -170,16 +214,16 @@ diamonds %>%
 # Try facetting by cut and grouping by carat
 
 diamonds %>%
-  group_by(cut_width(carat, 0.1)) %>%
-  ggplot(aes(x = price)) +
+  #group_by(cut_width(carat, 0.1)) %>%
+  ggplot(aes(x = price), grouping=cut_width(carat, 0.1)) +
   geom_histogram() +
   facet_wrap(~cut)
 
 #Try facetting by carat and grouping by cut.
 
 diamonds %>%
-  group_by(cut) %>%
-  ggplot(aes(x = price)) +
+  #group_by(cut) %>%
+  ggplot(aes(x = price), grouping=cut) +
   geom_histogram() +
   facet_wrap(~cut_width(carat, 0.1))
 
@@ -214,15 +258,33 @@ diamonds %>%
   facet_wrap(~color)
 
 #A useful annotation could be to add in the mean of each group on each of the plots
+
 df <- diamonds %>%
   group_by(color) %>%
   summarise(carat = mean(carat), price=mean(price)) %>%
   rename(color2 = color)
-diamonds %>%
+p1 <- diamonds %>%
   ggplot(aes(x=carat, y=price)) +
   geom_point() +
   geom_point(data=df, aes(colour=color2)) +
   facet_wrap(~color)
+p1
+
+#or to add in regression lines to a plot
+df <- diamonds %>%
+  group_by(color) %>%
+  summarise(carat = mean(carat), price=mean(price)) %>%
+  rename(color2 = color)
+p2 <- diamonds %>%
+  ggplot(aes(x=carat, y=price)) +
+  geom_point() +
+  geom_point(data=df, aes(colour=color2)) +
+  facet_wrap(~color) +
+  geom_smooth(aes(colour=color), method='lm', se=F)
+p2
+#This version isn't great - it obscures the data a lot but can still be a good way to
+#show that whether the means of the other colours were higher or lower than the mean of
+#the colour being observed
 
 ### Labels (labs)
 
@@ -389,7 +451,9 @@ ratio_y <- max_ratio$price
 df %>%
   ggplot(aes(x = carat, y = price)) + 
   geom_point() +
-  geom_label(label='Yeah boi', aes(x=ratio_x, y=ratio_y))
+  geom_point(aes(x = ratio_x, y=ratio_y), colour = 'light green') +
+  geom_label(label='Max value-per-carat', x=ratio_x, y=ratio_y - 400, colour='light green')
+  
 
 ### Legends
 
