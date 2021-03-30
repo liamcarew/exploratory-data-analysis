@@ -39,6 +39,24 @@ leaflet() %>%
 
 # EXERCISE: shade the polygons by the number of households (HHs), or the predominant age (Predom_Age)
 
+#HHs
+pal <- colorNumeric("Blues", domain = ct_inf$HHs)
+leaflet() %>% 
+  addProviderTiles("Esri.WorldStreetMap") %>%
+  setView(lng = 18.4241, lat = -33.9249, zoom = 10) %>%
+  addPolygons(data = ct_inf, color = ~pal(HHs), fillOpacity = 1) %>%
+  addLegend(data = ct_inf, pal = pal, values = ~HHs)
+
+#Predom_Age
+
+#there are many NA values in 'Predom_Age'
+pal <- colorNumeric("Blues", domain = ct_inf$Predom_Age)
+leaflet() %>% 
+  addProviderTiles("Esri.WorldStreetMap") %>%
+  setView(lng = 18.4241, lat = -33.9249, zoom = 10) %>%
+  addPolygons(data = ct_inf, color = ~pal(!is.na(Predom_Age)), fillOpacity = 1) %>%
+  addLegend(data = ct_inf, pal = pal, values = ~ !is.na(Predom_Age))
+
 # add markers for each settlement
 pal <- colorNumeric("Blues", domain = ct_inf$Traveltime)
 leaflet() %>% 
