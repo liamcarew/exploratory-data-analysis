@@ -20,7 +20,10 @@ library(leaflet)
 library(stringr)
 library(tmap)
 library(spData)
+#install.packages("spDataLarge", repos = "https://nowosad.github.io/drat/", type = "source")
 library(spDataLarge)
+#install.packages('rgdal')
+library(rgdal)
 library(knitr)
 ```
 
@@ -126,7 +129,7 @@ plot(elevation)
 
 ```{r}
 # POINT
-(pt1 <- st_point(c(5, 2))) 
+(pt1 <- st_point(c(5, 2)))
 ```
 
 ```{r, echo = FALSE}

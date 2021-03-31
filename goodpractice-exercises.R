@@ -168,7 +168,15 @@ co2 %>%
 co2 %>%
   ggplot(aes(x = Month, y = co2, colour=Year)) + 
   geom_line()
-#almost unintelligible <- this is because 'Month' is a categorical variable
+#almost unintelligible <- this is because 'Month' is a categorical variable.
+#not a line graph anymore <- has become a weird-looking bar chart where lines are used
+#let's try plotting using bars
+
+co2 %>%
+  ggplot(aes(x = Month, y = co2, colour=Year)) + 
+  geom_bar(stat='identity')
+
+#better but still difficult to read
 
 ## geom_area
 
@@ -451,8 +459,8 @@ ratio_y <- max_ratio$price
 df %>%
   ggplot(aes(x = carat, y = price)) + 
   geom_point() +
-  geom_point(aes(x = ratio_x, y=ratio_y), colour = 'light green') +
-  geom_label(label='Max value-per-carat', x=ratio_x, y=ratio_y - 400, colour='light green')
+  #geom_point(aes(x = ratio_x, y=ratio_y), colour = 'light green') +
+  geom_label(label='Max value-per-carat', mapping = aes(x=ratio_x, y=ratio_y), colour='light green')
   
 
 ### Legends
