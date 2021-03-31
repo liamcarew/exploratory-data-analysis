@@ -49,13 +49,16 @@ leaflet() %>%
 
 #Predom_Age
 
-#there are many NA values in 'Predom_Age'
+#handle missing values using imputation of mode value or removal
+
+#removal
+ct_inf$Predom_Age <- !is.na(ct_inf$Predom_Age)
 pal <- colorNumeric("Blues", domain = ct_inf$Predom_Age)
 leaflet() %>% 
   addProviderTiles("Esri.WorldStreetMap") %>%
   setView(lng = 18.4241, lat = -33.9249, zoom = 10) %>%
-  addPolygons(data = ct_inf, color = ~pal(!is.na(Predom_Age)), fillOpacity = 1) %>%
-  addLegend(data = ct_inf, pal = pal, values = ~ !is.na(Predom_Age))
+  addPolygons(data = ct_inf, color = ~pal(Predom_Age), fillOpacity = 1) %>%
+  addLegend(data = ct_inf, pal = pal, values = ~ Predom_Age)
 
 # add markers for each settlement
 pal <- colorNumeric("Blues", domain = ct_inf$Traveltime)
@@ -64,7 +67,7 @@ leaflet() %>%
   setView(lng = 18.4241, lat = -33.9249, zoom = 10) %>%
   addPolygons(data = ct_inf, color = ~pal(Traveltime), fillOpacity = 1) %>%
   addLegend(data = ct_inf, pal = pal, values = ~Traveltime) %>% 
-  addMarkers(data = inf_center)
+  addMarkers(data = ct_inf_center)
 
 # use the "popup" and "label" arguments to addMarkers so that the settlement name
 # is displayed on a mouseclick (InformalSe) and the travel time is shown on mouse over (Traveltime)
@@ -76,12 +79,33 @@ leaflet() %>%
   addPolygons(data = ct_inf, color = ~pal(Traveltime), fillOpacity = 1) %>%
   addLegend(data = ct_inf, pal = pal, values = ~Traveltime) %>%
   addMarkers(data = ct_inf_center, popup = ~InformalSe, label = ~as.character(Traveltime))
-
+  
 # EXERCISE: overlay the quarter-degree grid cells in the ct_qdgc dataset
+
+pal <- colorNumeric("Blues", domain = ct_inf$Traveltime)
+leaflet() %>% 
+  addProviderTiles("Esri.WorldStreetMap") %>%
+  setView(lng = 18.4241, lat = -33.9249, zoom = 10) %>%
+  addPolygons(data = ct_inf, color = ~pal(Traveltime), fillOpacity = 1) %>%
+  addLegend(data = ct_inf, pal = pal, values = ~Traveltime) %>%
+  addMarkers(data = ct_inf_center, popup = ~InformalSe, label = ~as.character(Traveltime)) %>%
+  addPolygons(data = ct_qdgc)
 
 # EXERCISE: count how many informal settlements are in each grid cell, and 
 # shade each grid cell by the number of informal settlements it contains
 
+##COME BACK TO THIS ONE
+
+pal <- colorNumeric("YlOrRd", domain = ct_inf$Traveltime)
+leaflet() %>% 
+  addProviderTiles("Esri.WorldStreetMap") %>%
+  setView(lng = 18.4241, lat = -33.9249, zoom = 10) %>%
+  addPolygons(data = ct_inf, color = ~pal(Traveltime), fillOpacity = 1) %>%
+  addLegend(data = ct_inf, pal = pal, values = ~Traveltime) %>%
+  addMarkers(data = ct_inf_center, popup = ~InformalSe, label = ~as.character(Traveltime)) %>%
+  addPolygons(data = ct_qdgc, fillColor = ~pal(ct_inf), fillOpacity = 1)
+
 # EXERCISE (unrelated to the above): work through the application in Ch 13 of 
 # Geocomputation with R (https://geocompr.robinlovelace.net/location.html)
 
+#in 'Geocomputation-in-R.Rmd' file

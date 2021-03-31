@@ -1,0 +1,122 @@
+---
+title: "Geocomputation with R- Ch13"
+author: "Liam Carew"
+date: "31/03/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#libraries
+
+library(sf)
+library(dplyr)
+library(purrr)
+library(raster)
+#install.packages('osmdata')
+library(osmdata)
+library(spDataLarge)
+#install.packages('igraph')
+library(igraph)
+
+##Case Study: Bike Shops in Germany 
+
+##tidy the input data
+
+#read in the data
+
+download.file("https://tinyurl.com/ybtpkwxz", 
+              destfile = "census.zip", mode = "wb")
+unzip("census.zip") # unzip the files
+census_de = readr::read_csv2(list.files(pattern = "Gitter.csv"))
+
+#The census_de object is a data frame containing 13 variables for more than 300,000 grid cells across Germany. 
+#For our work, we only need a subset of these: 
+#Easting (x) and Northing (y), number of inhabitants (population; pop), mean average age (mean_age), proportion of women (women) and average household size (hh_size). 
+#These variables are selected and renamed from German into English in the code chunk below and summarized in Table 13.1. 
+#Further, mutate_all() is used to convert values -1 and -9 (meaning unknown) to NA.
+
+# pop = population, hh_size = household size
+input = dplyr::select(census_de, x = x_mp_1km, y = y_mp_1km, pop = Einwohner,
+                      women = Frauen_A, mean_age = Alter_D,
+                      hh_size = HHGroesse_D)
+# set -1 and -9 to NA
+input_tidy = mutate_all(input, list(~ifelse(. %in% c(-1, -9), NA, .)))
+
+##Create census rasters
+
+#After the preprocessing, the data can be converted into a raster stack or brick (see Sections 2.3.3 and 3.3.1). 
+#rasterFromXYZ() makes this really easy. It requires an input data frame where the first two columns represent coordinates on a regular grid. 
+#All the remaining columns (here: pop, women, mean_age, hh_size) will serve as input for the raster brick layers (Figure 13.1; see also code/13-location-jm.R in our github repository).
+
+input_ras = rasterFromXYZ(input_tidy, crs = st_crs(3035)$proj4string)
+input_ras
+
+#The next stage is to reclassify the values of the rasters stored in input_ras in accordance 
+#with the survey mentioned in Section 13.2, using the raster function reclassify()
+
+rcl_pop = matrix(c(1, 1, 127, 2, 2, 375, 3, 3, 1250, 
+                   4, 4, 3000, 5, 5, 6000, 6, 6, 8000), 
+                 ncol = 3, byrow = TRUE)
+rcl_women = matrix(c(1, 1, 3, 2, 2, 2, 3, 3, 1, 4, 5, 0), 
+                   ncol = 3, byrow = TRUE)
+rcl_age = matrix(c(1, 1, 3, 2, 2, 0, 3, 5, 0),
+                 ncol = 3, byrow = TRUE)
+rcl_hh = rcl_women
+rcl = list(rcl_pop, rcl_women, rcl_age, rcl_hh)
+
+#Note that we have made sure that the order of the reclassification matrices in the list is the same as for the elements of input_ras. 
+#For instance, the first element corresponds in both cases to the population. 
+#Subsequently, the for-loop applies the reclassification matrix to the corresponding raster layer. 
+#Finally, the code chunk below ensures the reclass layers have the same name as the layers of input_ras
+
+reclass = input_ras
+for (i in seq_len(nlayers(reclass))) {
+  reclass[[i]] = reclassify(x = reclass[[i]], rcl = rcl[[i]], right = NA)
+}
+names(reclass) = names(input_ras)
+
+#Define metropolitan areas
+
+pop_agg = aggregate(reclass$pop, fact = 20, fun = sum)
+
+#The next stage is to keep only cells with more than half a million people.
+
+pop_agg = pop_agg[pop_agg > 500000, drop = FALSE]
+
+#Plotting this reveals eight metropolitan regions (Figure 13.2). 
+#Each region consists of one or more raster cells. 
+#It would be nice if we could join all cells belonging to one region. 
+#raster’s clump() command does exactly that. 
+#Subsequently, rasterToPolygons() converts the raster object into spatial polygons, and st_as_sf() converts it into an sf-object.
+
+polys = pop_agg %>% 
+  clump() %>%
+  rasterToPolygons() %>%
+  st_as_sf()
+
+#polys now features a column named clumps which indicates to which metropolitan region 
+#each polygon belongs and which we will use to dissolve the polygons into coherent single regions (see also Section 5.2.6):
+
+metros = polys %>%
+  group_by(clumps) %>%
+  summarize()
+
+#The resulting eight metropolitan areas suitable for bike shops (Figure 13.2; see also code/13-location-jm.R for creating the figure) 
+#are still missing a name
+#A reverse geocoding approach can settle this problem
+#revgeo::revgeo() only accepts geographical coordinates (latitude/longitude); 
+#therefore, the first requirement is to bring the metropolitan polygons into an appropriate coordinate reference system (Chapter 6).
+
+metros_wgs = st_transform(metros, 4326)
+coords = st_centroid(metros_wgs) %>%
+  st_coordinates() %>%
+  round(4)
+
+#Choosing frame as revgeocode()’s output option will give back a data.frame with several columns referring to the location including the street name, house number and city.
+
+library(revgeo)
+metro_names = revgeo(longitude = coords[, 1], latitude = coords[, 2], 
+                     output = "frame")
