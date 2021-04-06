@@ -1,5 +1,6 @@
 library(dplyr)
 library(ggplot2)
+#install.packages('plotly')
 library(plotly)
 
 # load the diamonds dataset from the ggplot2 package
@@ -21,4 +22,9 @@ plot_ly(diamonds, x = ~cut, color = I("red"), stroke = I("black"), span = I(5), 
 
 # use the pipe to make the plot in the exercise
 diamonds %>%
-  ???
+  group_by(cut) %>%
+  summarise(n=n()) %>%
+  plot_ly(x = ~cut, y = ~n, color = I("red")) %>%
+  layout(title = 'Number of diamonds per cut category',
+         yaxis = list(tickformat = 'digits'))
+  

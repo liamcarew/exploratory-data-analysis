@@ -18,6 +18,7 @@ library(tidyr)
 library(sf)
 library(gapminder)
 library(rnaturalearth)
+#install.packages('gganimate')
 library(gganimate)
 library(knitr)
 ```

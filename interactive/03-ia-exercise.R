@@ -4,6 +4,10 @@ library(plotly)
 library(tidyr)
 library(gapminder)
 library(gganimate)
+#install.packages('gifski')
+library(gifski)
+#install.packages('transformr')
+library(transformr)
 
 df <- data.frame(f = 1:100,
                  t <- seq(0,10*pi, length.out=100), 
@@ -35,12 +39,12 @@ animate(ps1)
 
 # shadow_wake: like shadow_mark, but plots past points differently depending on 
 # how old they are 
-ps2 <- p1
-  shadow_wake(colour = 'black', wake_length = 0.25, size = 0.5)
+ps2 <- p1 +
+  shadow_wake(colour = 'black', wake_length = 0.25, size = 0.5, wrap=FALSE)
 animate(ps2)
 # control the amount of wake with the `wake_length` option
 # notice the shadow "wraps" so at t=1 you see a "wake" containing the LAST few
-# observations. Figure out how to turn this off!
+# observations. Figure out how to turn this off! <-- used 'wrap = FALSE'
 
 # shadow_trail: keeps every nth frame to create a "breadcrumb" trail. 
 ps3 <- p1 +
@@ -57,10 +61,15 @@ load("timeseries/data/purchase_data.rdata")
 store_counts <- purchase_data %>% 
   count(month, day) 
 
-store_counts %>% ggplot(aes(day, n)) +
+p2 <- store_counts %>% ggplot(aes(day, n)) +
   geom_line(aes(group = month))
 
 # animate this plot, using shadow_xxx and view_xxx to control how it looks
+
+p2a <- p2 +
+  view_follow(fixed_y = TRUE)
+animate(p2a)#didn't work - check in answer what you are doing wrong
+#shadow_mark(colour = 'black') +
 
 # base ggplot
 sp1 <- store_counts %>% ggplot(aes(day, n)) +

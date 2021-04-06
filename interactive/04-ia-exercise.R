@@ -6,6 +6,8 @@ library(sf)
 library(gapminder)
 library(rnaturalearth)
 library(gganimate)
+#install.packages('rgeos')
+library(rgeos)
 
 # load country stats over time
 data(gapminder)
