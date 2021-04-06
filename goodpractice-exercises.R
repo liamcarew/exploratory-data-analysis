@@ -433,14 +433,18 @@ diamonds %>%
 # rotating the x axis text so that it is vertical, and change
 # the axis text so that it does not include numbers in scientific notation
 
+#Method 1
+
 diamonds %>%
-  ggplot(aes(x = cut_interval(price, n = 5))) + 
+  ggplot(aes(x = cut_interval(price, n = 5, dig.lab=5))) + 
   geom_bar() +
-  scale_x_log10(
-    breaks = scales::trans_breaks("log10", function(x) 10^x),
-    labels = scales::trans_format("log10", scales::math_format(10^.x))) +
   labs(x = 'Price ($)', y = 'Frequency', title='Distribution of Price of Diamonds ($)') +
-  theme(axis.text.x = element_text(angle=90))
+  #theme(axis.text.x = element_text(angle=90))
+  coord_flip()
+
+#Method 2
+
+
   
 
 # EXERCISE: Use geom_label to add a label to the plot below that identifies 
