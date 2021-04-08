@@ -34,4 +34,4 @@ p2 <- diamonds %>% sample_n(1000) %>%
 p2
 
 # or ggplotly and then view interactively
-ggplotly(p)
+ggplotly(p2)

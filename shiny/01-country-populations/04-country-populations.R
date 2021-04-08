@@ -1,6 +1,9 @@
 library(dplyr)
 library(ggplot2)
 library(shiny)
+#install.packages(DT)
+library(DT)
+library(plotly)
 
 load("country-population.rda")
 
@@ -13,21 +16,21 @@ ui <- fluidPage(
             checkboxInput("line", "Plot line")
         ),
         mainPanel(
-            plotOutput("plot"),
-            tableOutput("table")
+            plotlyOutput("plot"),
+            DTOutput("table")
         )
     )
 )
 
 server <- function(input, output) {
-    output$plot <- renderPlot({
+    output$plot <- renderPlotly({
         data <- populations %>% filter(code %in% input$country)
         p <- ggplot(data, aes(x = year, y = population / 1000000)) +
-            scale_y_log10("Population (million)") +
+            scale_y_log10("Population (million)")
         if (input$line) p <- p + geom_line(aes(group = code))
-        p + geom_point(aes(color = code), size = input$size)
+        ggplotly(p + geom_point(aes(color = code), size = input$size))
     })
-    output$table <- renderTable({
+    output$table <- DT::renderDataTable({
         data <- populations %>%
             filter(code %in% input$country) %>%
             group_by(code) %>%

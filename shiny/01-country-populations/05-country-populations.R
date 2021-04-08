@@ -47,3 +47,6 @@ server <- function(input, output) {
 }
 
 shinyApp(ui = ui, server = server)
+
+#'renderPlotly' depends on countries selected ('country'), the size of points selected ('size') and whether or not to plot lines ('line')
+#'renderDataTable' depends on countries selected ('country') and whether or not table is meant to be displayed ('show_table')
